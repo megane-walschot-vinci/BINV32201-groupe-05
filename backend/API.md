@@ -145,6 +145,9 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 ### Requête
 
 - Header `Authorization` obligatoire
+- Paramètre facultatif `period` : code de période (`P1`, `P2` ou `OTHER`). Le filtre est
+  appliqué après les règles de visibilité du profil. Une valeur invalide ou répétée
+  retourne `400` `INVALID_QUERY`.
 
 ### Réponses
 
