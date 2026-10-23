@@ -120,6 +120,16 @@ describe("GET /offers : filtre par période", () => {
     );
   });
 
+  it("accepte le libellé frontend Autre et le convertit en code OTHER", async () => {
+    const response = await listOffersAs("ADMIN", ADMINISTRATOR.ANNE_LECLERCQ, "Autre");
+
+    expect(response.status).toBe(200);
+    expect(offerIds(response.body)).toEqual([OFFER.CONSULTANT_PLANNING, OFFER.E2E_TESTS]);
+    expect(response.body.every((offer: { period: string }) => offer.period === "OTHER")).toBe(
+      true,
+    );
+  });
+
   it("combine le filtre de période avec la visibilité étudiant", async () => {
     const response = await listOffersAs("STUDENT", STUDENT.LUCAS_DUPONT, "P2");
 

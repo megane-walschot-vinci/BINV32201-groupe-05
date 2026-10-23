@@ -12,11 +12,12 @@ const isPeriodCode = (value: string): value is PeriodCode =>
 
 const parsePeriod = (value: unknown): PeriodCode | undefined => {
   if (value === undefined) return undefined;
+  if (value === "Autre") return "OTHER";
   if (typeof value !== "string" || !isPeriodCode(value)) {
     throw new HttpError(
       400,
       "INVALID_QUERY",
-      "Le paramètre period doit être P1, P2 ou OTHER et apparaître une seule fois",
+      "Le paramètre period doit être P1, P2, OTHER ou Autre et apparaître une seule fois",
     );
   }
   return value;
