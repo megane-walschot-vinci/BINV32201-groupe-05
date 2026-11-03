@@ -31,6 +31,7 @@ Toute erreur a la même forme :
 | 400 | `INVALID_BODY` | Corps de requête invalide |
 | 401 | `UNAUTHENTICATED` | Session absente, expirée ou invalide ; compte non autorisé à se connecter |
 | 403 | `FORBIDDEN` | Utilisateur connecté, mais sans droit sur la ressource |
+| 409 | `APPLICATION_EXISTS` | L'étudiant a déjà une candidature non retirée pour cette offre |
 | 404 | `NOT_FOUND` | Route inconnue |
 | 500 | `INTERNAL_ERROR` | Erreur inattendue du serveur |
 
@@ -171,3 +172,22 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : contact seulement promoteur ou signataire.
+
+## POST /offers/:offerId/applications
+
+Permet à un étudiant connecté de candidater à une offre publiée.
+
+### Requête
+
+- Header `Authorization` obligatoire
+- Body JSON facultatif : `{ "message": "…" }`
+- Le message est facultatif et limité à 2000 caractères.
+
+### Réponses
+
+- `201` : candidature créée avec le statut `IN_PROGRESS`
+- `400` `INVALID_BODY` : message invalide
+- `400` `INVALID_STATE` : offre inexistante dans un état autre que `PUBLISHED`
+- `403` `FORBIDDEN` : l'utilisateur connecté n'est pas étudiant
+- `404` `NOT_FOUND` : offre inconnue
+- `409` `APPLICATION_EXISTS` : une candidature existante, quel que soit son statut sauf `WITHDRAWN`
