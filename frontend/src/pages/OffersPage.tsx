@@ -1,8 +1,10 @@
+import { useState } from "react";
 import EmptyState from "../components/EmptyState.tsx";
 import ErrorState from "../components/ErrorState.tsx";
 import LoadingState from "../components/LoadingState.tsx";
 import OfferTable from "../components/OfferTable.tsx";
 import { useOffers } from "../hooks/useOffers.ts";
+import { PERIOD_FILTERS, type PeriodFilter } from "../models/offer.ts";
 import type { User } from "../models/user.ts";
 
 interface OffersPageProps {
@@ -18,7 +20,12 @@ const DESCRIPTIONS = {
 } as const;
 
 const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
-  const { offers, isLoading, error } = useOffers(token, onUnauthorized);
+  const [period, setPeriod] = useState<PeriodFilter | "">("");
+  const { offers, isLoading, error } = useOffers(
+    token,
+    onUnauthorized,
+    period === "" ? undefined : period,
+  );
 
   const renderContent = () => {
     if (error) return <ErrorState message={error} />;
@@ -38,6 +45,21 @@ const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
     <section>
       <h1>Offres de stage</h1>
       <p>{DESCRIPTIONS[user.kind]}</p>
+      <label className="period-filter">
+        <span>Période</span>
+        <select
+          aria-label="Filtrer par période"
+          value={period}
+          onChange={(event) => setPeriod(event.target.value as PeriodFilter | "")}
+        >
+          <option value="">Toutes les périodes</option>
+          {PERIOD_FILTERS.map((periodOption) => (
+            <option key={periodOption} value={periodOption}>
+              {periodOption}
+            </option>
+          ))}
+        </select>
+      </label>
       {renderContent()}
     </section>
   );

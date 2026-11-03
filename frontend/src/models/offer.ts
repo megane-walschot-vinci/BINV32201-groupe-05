@@ -6,6 +6,10 @@ export const PERIOD_CODES = ["P1", "P2", "OTHER"] as const;
 
 export type PeriodCode = (typeof PERIOD_CODES)[number];
 
+export const PERIOD_FILTERS = ["P1", "P2", "Autre"] as const;
+
+export type PeriodFilter = (typeof PERIOD_FILTERS)[number];
+
 export interface Offer {
   id: number;
   title: string;
