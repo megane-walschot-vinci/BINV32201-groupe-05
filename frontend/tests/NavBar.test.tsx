@@ -22,6 +22,9 @@ describe("NavBar", () => {
 
     expect(screen.getByRole("link", { name: "Offres" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Entreprises" })).toBeInTheDocument();
+    if (user.kind === "STUDENT") {
+      expect(screen.getByRole("link", { name: "Mes candidatures" })).toBeInTheDocument();
+    }
   });
 
   it("ne propose pas les offres à un contact sans rôle de déposant", () => {
@@ -29,5 +32,6 @@ describe("NavBar", () => {
 
     expect(screen.queryByRole("link", { name: "Offres" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Entreprises" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Mes candidatures" })).not.toBeInTheDocument();
   });
 });

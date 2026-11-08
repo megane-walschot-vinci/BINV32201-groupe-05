@@ -98,4 +98,41 @@ describe("OffersPage", () => {
 
     await waitFor(() => expect(onUnauthorized).toHaveBeenCalled());
   });
+
+  it("permet à un étudiant de candidater depuis la liste", async () => {
+    const fetchMock = stubFetch({
+      "/api/offers": () => Response.json([{
+        id: 1,
+        title: "Application React",
+        companyShortName: "Lumen Digital",
+        academicYear: "2026-2027",
+        period: "P2",
+        status: "PUBLISHED",
+      }]),
+      "/api/offers/1/applications": () => Response.json({
+        id: 99,
+        offerId: 1,
+        message: "Mon message",
+        status: "IN_PROGRESS",
+        appliedAt: "2026-11-03 14:00:00",
+      }, { status: 201 }),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    await screen.findByText("Application React");
+    fireEvent.click(screen.getByRole("button", { name: "Candidater" }));
+    fireEvent.change(screen.getByLabelText("Message pour Application React"), {
+      target: { value: "Mon message" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Envoyer" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/offers/1/applications",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ message: "Mon message" }),
+      }),
+    ));
+    expect(await screen.findByText("Candidature envoyée")).toBeInTheDocument();
+  });
 });
