@@ -26,6 +26,61 @@ describe("POST /offers/:offerId/applications", () => {
     expect(response.body.error.code).toBe("UNAUTHENTICATED");
   });
 
+  describe("GET /applications", () => {
+    it("retourne uniquement les candidatures de l'étudiant connecté", async () => {
+      const response = await request(app)
+        .get("/applications?studentId=1")
+        .set("Authorization", tokenFor("STUDENT", STUDENT.INES_HADDAD));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(2);
+      expect(response.body.map((application: { offerId: number }) => application.offerId)).toEqual([
+        OFFER.FLEET_APP,
+        OFFER.BILLING_API,
+      ]);
+      expect(response.body.map((application: { status: string }) => application.status)).toEqual([
+        "IN_PROGRESS",
+        "WITHDRAWN",
+      ]);
+      expect(response.body[0]).toMatchObject({
+        offerTitle: "Application React de gestion de flotte",
+        companyShortName: "Lumen Digital",
+        academicYear: "2026-2027",
+        period: "P2",
+      });
+      expect(response.body[0]).not.toHaveProperty("studentId");
+    });
+
+    it("ne mélange pas les candidatures de deux étudiants", async () => {
+      const lucas = await request(app)
+        .get("/applications")
+        .set("Authorization", tokenFor("STUDENT", STUDENT.LUCAS_DUPONT));
+      const youssef = await request(app)
+        .get("/applications")
+        .set("Authorization", tokenFor("STUDENT", STUDENT.YOUSSEF_EL_AMRANI));
+
+      expect(lucas.status).toBe(200);
+      expect(youssef.status).toBe(200);
+      expect(lucas.body).toHaveLength(1);
+      expect(youssef.body).toHaveLength(1);
+      expect(lucas.body[0].offerId).toBe(OFFER.FLEET_APP);
+      expect(youssef.body[0].offerId).toBe(OFFER.BILLING_API);
+    });
+
+    it.each([
+      ["sans session", undefined],
+      ["administrateur", tokenFor("ADMIN", 1)],
+      ["contact", tokenFor("CONTACT", 2)],
+    ])("refuse l'accès à %s", async (_profile, token) => {
+      const requestBuilder = request(app).get("/applications");
+      if (token !== undefined) requestBuilder.set("Authorization", token);
+
+      const response = await requestBuilder;
+      expect(response.status).toBe(token === undefined ? 401 : 403);
+      expect(response.body.error.code).toBe(token === undefined ? "UNAUTHENTICATED" : "FORBIDDEN");
+    });
+  });
+
   it("crée une candidature avec un message facultatif", async () => {
     const response = await applyAs(STUDENT.DMYTRO_KOVALENKO, OFFER.FLEET_APP, {
       message: "Je suis très motivé par ce sujet.",

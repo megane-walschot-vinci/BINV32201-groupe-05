@@ -39,3 +39,13 @@ export const createApplicationsRouter = (service: ApplicationsService) => {
 
   return router;
 };
+
+export const createMyApplicationsRouter = (service: ApplicationsService) => {
+  const router = Router();
+
+  router.get("/", (req, res) => {
+    res.json(service.listMine(getCurrentUser(req)));
+  });
+
+  return router;
+};

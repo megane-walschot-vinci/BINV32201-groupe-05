@@ -14,3 +14,15 @@ export interface CreatedApplication {
   status: ApplicationStatus;
   appliedAt: string;
 }
+
+export interface Application {
+  id: number;
+  offerId: number;
+  offerTitle: string;
+  companyShortName: string;
+  academicYear: string;
+  period: "P1" | "P2" | "OTHER";
+  message: string | null;
+  status: ApplicationStatus;
+  appliedAt: string;
+}

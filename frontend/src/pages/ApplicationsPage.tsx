@@ -1,0 +1,66 @@
+import EmptyState from "../components/EmptyState.tsx";
+import ErrorState from "../components/ErrorState.tsx";
+import LoadingState from "../components/LoadingState.tsx";
+import StatusBadge from "../components/StatusBadge.tsx";
+import { useApplications } from "../hooks/useApplications.ts";
+import type { User } from "../models/user.ts";
+import {
+  APPLICATION_STATUS_LABELS,
+  APPLICATION_STATUS_TONES,
+  PERIOD_LABELS,
+} from "../utils/labels.ts";
+
+interface ApplicationsPageProps {
+  user: User;
+  token: string;
+  onUnauthorized: () => void;
+}
+
+const ApplicationsPage = ({ user, token, onUnauthorized }: ApplicationsPageProps) => {
+  const { applications, isLoading, error } = useApplications(token, onUnauthorized);
+
+  if (error) return <ErrorState message={error} />;
+  if (isLoading) return <LoadingState />;
+
+  return (
+    <section>
+      <h1>Mes candidatures</h1>
+      <p>Les candidatures de {user.firstName}.</p>
+      {applications.length === 0 ? (
+        <EmptyState message="Aucune candidature à afficher." />
+      ) : (
+        <div className="table-wrapper">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th scope="col">Offre</th>
+                <th scope="col">Entreprise</th>
+                <th scope="col">Année</th>
+                <th scope="col">Période</th>
+                <th scope="col">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((application) => (
+                <tr key={application.id}>
+                  <td>{application.offerTitle}</td>
+                  <td>{application.companyShortName}</td>
+                  <td>{application.academicYear}</td>
+                  <td>{PERIOD_LABELS[application.period]}</td>
+                  <td>
+                    <StatusBadge
+                      label={APPLICATION_STATUS_LABELS[application.status]}
+                      tone={APPLICATION_STATUS_TONES[application.status]}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+};
+
+export default ApplicationsPage;

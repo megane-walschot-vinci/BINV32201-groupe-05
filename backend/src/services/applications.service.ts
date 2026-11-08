@@ -1,5 +1,5 @@
-import { toApplication } from "../mappers/application.mapper.ts";
-import type { Application } from "../models/application.ts";
+import { toApplication, toApplicationListDto } from "../mappers/application.mapper.ts";
+import type { Application, ApplicationListDto } from "../models/application.ts";
 import type { ApplicationsRepository } from "../repositories/applications.repository.ts";
 import type { User } from "../models/user.ts";
 import { HttpError } from "../utils/httpError.ts";
@@ -14,6 +14,16 @@ const isUniqueConstraintError = (error: unknown): boolean =>
   (error as { code?: unknown }).code === "SQLITE_CONSTRAINT_UNIQUE";
 
 export const createApplicationsService = (repository: ApplicationsRepository) => ({
+  listMine: (viewer: User): ApplicationListDto[] => {
+    if (!isStudent(viewer)) {
+      throw new HttpError(403, "FORBIDDEN", "Seuls les étudiants peuvent consulter leurs candidatures");
+    }
+    if (!isPositiveInteger(viewer.id)) {
+      throw new HttpError(401, "UNAUTHENTICATED", "Session absente, expirée ou invalide");
+    }
+    return repository.findByStudent(viewer.id).map(toApplicationListDto);
+  },
+
   apply: (viewer: User, offerId: number, message: string | null): Application => {
     if (!isStudent(viewer)) {
       throw new HttpError(403, "FORBIDDEN", "Seuls les étudiants peuvent candidater");
