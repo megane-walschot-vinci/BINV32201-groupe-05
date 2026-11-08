@@ -17,6 +17,15 @@ const applyAs = (studentId: number, offerId: number, body: object) =>
     .send(body);
 
 describe("POST /offers/:offerId/applications", () => {
+  it("refuse une requête sans session", async () => {
+    const response = await request(app)
+      .post(`/offers/${OFFER.FLEET_APP}/applications`)
+      .send({});
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("UNAUTHENTICATED");
+  });
+
   it("crée une candidature avec un message facultatif", async () => {
     const response = await applyAs(STUDENT.DMYTRO_KOVALENKO, OFFER.FLEET_APP, {
       message: "Je suis très motivé par ce sujet.",
@@ -42,6 +51,13 @@ describe("POST /offers/:offerId/applications", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("INVALID_STATE");
+  });
+
+  it("retourne 404 pour une offre inconnue", async () => {
+    const response = await applyAs(STUDENT.DMYTRO_KOVALENKO, 999, {});
+
+    expect(response.status).toBe(404);
+    expect(response.body.error.code).toBe("NOT_FOUND");
   });
 
   it("refuse les profils non étudiants", async () => {

@@ -14,7 +14,6 @@ const parseOfferId = (value: string): number => {
 
 const parseMessage = (body: unknown): string | null => {
   if (body === undefined || body === null) return null;
-  if (body === undefined || body === null) return null;
   if (typeof body !== "object" || body === null) {
     throw new HttpError(400, "INVALID_BODY", "Le corps doit contenir un message facultatif");
   }

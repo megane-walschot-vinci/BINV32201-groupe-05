@@ -187,7 +187,7 @@ Permet à un étudiant connecté de candidater à une offre publiée.
 
 - `201` : candidature créée avec le statut `IN_PROGRESS`
 - `400` `INVALID_BODY` : message invalide
-- `400` `INVALID_STATE` : offre inexistante dans un état autre que `PUBLISHED`
+- `400` `INVALID_STATE` : offre existante dans un état autre que `PUBLISHED`
 - `403` `FORBIDDEN` : l'utilisateur connecté n'est pas étudiant
 - `404` `NOT_FOUND` : offre inconnue
 - `409` `APPLICATION_EXISTS` : une candidature existante, quel que soit son statut sauf `WITHDRAWN`
