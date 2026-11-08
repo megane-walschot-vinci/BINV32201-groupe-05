@@ -12,6 +12,14 @@ const parseOfferId = (value: string): number => {
   return offerId;
 };
 
+const parseApplicationId = (value: string): number => {
+  const applicationId = Number(value);
+  if (!Number.isInteger(applicationId) || applicationId <= 0) {
+    throw new HttpError(400, "INVALID_QUERY", "L'identifiant de la candidature est invalide");
+  }
+  return applicationId;
+};
+
 const parseMessage = (body: unknown): string | null => {
   if (body === undefined || body === null) return null;
   if (typeof body !== "object" || body === null) {
@@ -45,6 +53,14 @@ export const createMyApplicationsRouter = (service: ApplicationsService) => {
 
   router.get("/", (req, res) => {
     res.json(service.listMine(getCurrentUser(req)));
+  });
+
+  router.patch("/:id/withdraw", (req, res) => {
+    const application = service.withdraw(
+      getCurrentUser(req),
+      parseApplicationId(req.params.id),
+    );
+    res.json(toApplicationDto(application));
   });
 
   return router;

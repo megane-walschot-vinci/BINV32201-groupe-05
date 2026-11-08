@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ApplicationsPage from "../src/pages/ApplicationsPage.tsx";
 import { studentUser, stubFetch } from "./helpers/fetchMock.ts";
@@ -41,6 +41,35 @@ describe("ApplicationsPage", () => {
     render(<ApplicationsPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
 
     expect(await screen.findByText("Aucune candidature à afficher.")).toBeInTheDocument();
+  });
+
+  it("permet de retirer uniquement une candidature en cours", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const fetchMock = stubFetch({
+      "/api/applications/1/withdraw": () =>
+        Response.json({
+          id: 1,
+          offerId: 1,
+          message: null,
+          status: "WITHDRAWN",
+          appliedAt: "2026-10-01 10:00:00",
+        }),
+      "/api/applications": () =>
+        Response.json([application("IN_PROGRESS", 1), application("SELECTED", 2)]),
+    });
+
+    render(<ApplicationsPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    expect(await screen.findByText("En cours")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Retirer" })).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Retirer" }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/applications/1/withdraw",
+      expect.objectContaining({ method: "PATCH" }),
+    ));
+    expect(confirm).toHaveBeenCalledWith("Retirer cette candidature ?");
+    confirm.mockRestore();
   });
 
   it("gère une erreur et une session expirée", async () => {

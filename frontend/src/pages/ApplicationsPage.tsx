@@ -1,8 +1,11 @@
+import { useState } from "react";
 import EmptyState from "../components/EmptyState.tsx";
 import ErrorState from "../components/ErrorState.tsx";
 import LoadingState from "../components/LoadingState.tsx";
 import StatusBadge from "../components/StatusBadge.tsx";
 import { useApplications } from "../hooks/useApplications.ts";
+import { withdrawApplication } from "../services/applications.service.ts";
+import { isUnauthorized } from "../utils/api.ts";
 import type { User } from "../models/user.ts";
 import {
   APPLICATION_STATUS_LABELS,
@@ -17,7 +20,24 @@ interface ApplicationsPageProps {
 }
 
 const ApplicationsPage = ({ user, token, onUnauthorized }: ApplicationsPageProps) => {
-  const { applications, isLoading, error } = useApplications(token, onUnauthorized);
+  const { applications, isLoading, error, reload } = useApplications(token, onUnauthorized);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isWithdrawing, setIsWithdrawing] = useState<number | null>(null);
+
+  const handleWithdraw = async (applicationId: number) => {
+    if (!window.confirm("Retirer cette candidature ?")) return;
+    setActionError(null);
+    setIsWithdrawing(applicationId);
+    try {
+      await withdrawApplication(token, applicationId);
+      reload();
+    } catch (reason: unknown) {
+      if (isUnauthorized(reason)) onUnauthorized();
+      else setActionError(reason instanceof Error ? reason.message : "Retrait impossible");
+    } finally {
+      setIsWithdrawing(null);
+    }
+  };
 
   if (error) return <ErrorState message={error} />;
   if (isLoading) return <LoadingState />;
@@ -26,6 +46,7 @@ const ApplicationsPage = ({ user, token, onUnauthorized }: ApplicationsPageProps
     <section>
       <h1>Mes candidatures</h1>
       <p>Les candidatures de {user.firstName}.</p>
+      {actionError && <ErrorState message={actionError} />}
       {applications.length === 0 ? (
         <EmptyState message="Aucune candidature à afficher." />
       ) : (
@@ -38,6 +59,7 @@ const ApplicationsPage = ({ user, token, onUnauthorized }: ApplicationsPageProps
                 <th scope="col">Année</th>
                 <th scope="col">Période</th>
                 <th scope="col">Statut</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -52,6 +74,17 @@ const ApplicationsPage = ({ user, token, onUnauthorized }: ApplicationsPageProps
                       label={APPLICATION_STATUS_LABELS[application.status]}
                       tone={APPLICATION_STATUS_TONES[application.status]}
                     />
+                  </td>
+                  <td>
+                    {application.status === "IN_PROGRESS" && (
+                      <button
+                        type="button"
+                        disabled={isWithdrawing === application.id}
+                        onClick={() => void handleWithdraw(application.id)}
+                      >
+                        Retirer
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

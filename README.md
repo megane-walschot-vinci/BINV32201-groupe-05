@@ -179,4 +179,5 @@ de l'API se change avec `API_PORT` dans `backend/.env`.
 ## Suivi des séances
 
 Après chaque séance, ajoutez dans `docs/` la conversation exportée avec l'agent
-(`conversation-1.md`, `conversation-2.md`…). En fin de projet, ajoutez `docs/bilan.md`.
+(`docs/semaine1/conversation-1.md`, `docs/semaine1/conversation-2.md`…).
+En fin de projet, ajoutez un bilan dans le dossier de la semaine concernée.

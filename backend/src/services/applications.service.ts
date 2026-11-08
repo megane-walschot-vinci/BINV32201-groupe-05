@@ -24,6 +24,23 @@ export const createApplicationsService = (repository: ApplicationsRepository) =>
     return repository.findByStudent(viewer.id).map(toApplicationListDto);
   },
 
+  withdraw: (viewer: User, applicationId: number): Application => {
+    if (!isStudent(viewer)) {
+      throw new HttpError(403, "FORBIDDEN", "Seuls les étudiants peuvent retirer une candidature");
+    }
+    if (!isPositiveInteger(viewer.id)) {
+      throw new HttpError(401, "UNAUTHENTICATED", "Session absente, expirée ou invalide");
+    }
+    const application = repository.withdraw(applicationId, viewer.id);
+    if (application !== undefined) return toApplication(application);
+
+    const existing = repository.findById(applicationId);
+    if (existing === undefined || existing.student_id !== viewer.id) {
+      throw new HttpError(404, "NOT_FOUND", "Candidature introuvable");
+    }
+    throw new HttpError(409, "INVALID_STATE", "La candidature n'est plus en cours");
+  },
+
   apply: (viewer: User, offerId: number, message: string | null): Application => {
     if (!isStudent(viewer)) {
       throw new HttpError(403, "FORBIDDEN", "Seuls les étudiants peuvent candidater");

@@ -48,6 +48,7 @@ describe("POST /offers/:offerId/applications", () => {
         academicYear: "2026-2027",
         period: "P2",
       });
+
       expect(response.body[0]).not.toHaveProperty("studentId");
     });
 
@@ -78,6 +79,49 @@ describe("POST /offers/:offerId/applications", () => {
       const response = await requestBuilder;
       expect(response.status).toBe(token === undefined ? 401 : 403);
       expect(response.body.error.code).toBe(token === undefined ? "UNAUTHENTICATED" : "FORBIDDEN");
+    });
+  });
+
+  describe("PATCH /applications/:id/withdraw", () => {
+    it("retire sa candidature en cours sans supprimer la ligne", async () => {
+      const response = await request(app)
+        .patch("/applications/1/withdraw")
+        .set("Authorization", tokenFor("STUDENT", STUDENT.LUCAS_DUPONT));
+
+      expect(response.status).toBe(200);
+      expect(response.body.status).toBe("WITHDRAWN");
+      const mine = await request(app)
+        .get("/applications")
+        .set("Authorization", tokenFor("STUDENT", STUDENT.LUCAS_DUPONT));
+      expect(mine.body).toHaveLength(1);
+      expect(mine.body[0]).toMatchObject({ id: 1, status: "WITHDRAWN" });
+
+      const reapply = await applyAs(STUDENT.LUCAS_DUPONT, OFFER.FLEET_APP, {});
+      expect(reapply.status).toBe(201);
+    });
+
+    it.each([
+      ["inconnue", 999, STUDENT.LUCAS_DUPONT, 404],
+      ["d'un autre étudiant", 1, STUDENT.INES_HADDAD, 404],
+      ["retenue", 3, STUDENT.MATEUSZ_KOWALSKI, 409],
+      ["non retenue", 4, STUDENT.LEA_MERTENS, 409],
+      ["déjà retirée", 5, STUDENT.INES_HADDAD, 409],
+    ])("refuse une candidature %s", async (_case, id, studentId, expectedStatus) => {
+      const response = await request(app)
+        .patch(`/applications/${id}/withdraw`)
+        .set("Authorization", tokenFor("STUDENT", studentId));
+
+      expect(response.status).toBe(expectedStatus);
+    });
+
+    it("refuse les profils non étudiants et les requêtes sans session", async () => {
+      const withoutSession = await request(app).patch("/applications/1/withdraw");
+      expect(withoutSession.status).toBe(401);
+
+      const admin = await request(app)
+        .patch("/applications/1/withdraw")
+        .set("Authorization", tokenFor("ADMIN", 1));
+      expect(admin.status).toBe(403);
     });
   });
 

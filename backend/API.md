@@ -226,3 +226,22 @@ déterminé par la session.
 
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : l'utilisateur connecté n'est pas étudiant.
+
+## PATCH /applications/:id/withdraw
+
+Retire une candidature appartenant à l'étudiant connecté lorsqu'elle est encore en cours.
+La ligne est conservée et son statut devient `WITHDRAWN`.
+
+### Requête
+
+- Header `Authorization` obligatoire
+- Aucun corps ni identifiant d'étudiant n'est accepté
+
+### Réponses
+
+- `200` : candidature mise à jour avec le statut `WITHDRAWN`
+- `400` `INVALID_QUERY` : identifiant de candidature invalide
+- `401` `UNAUTHENTICATED` : session absente ou invalide
+- `403` `FORBIDDEN` : l'utilisateur connecté n'est pas étudiant
+- `404` `NOT_FOUND` : candidature inconnue ou appartenant à un autre étudiant
+- `409` `INVALID_STATE` : candidature déjà traitée ou déjà retirée
