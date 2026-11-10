@@ -1,6 +1,6 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
-import { OFFER, STUDENT } from "../src/db/seed/seedIds.ts";
+import { APPLICATION, OFFER, STUDENT } from "../src/db/seed/seedIds.ts";
 import { createTestApp, tokenFor } from "./helpers/testApp.ts";
 import { createTestDatabase } from "./helpers/testDatabase.ts";
 
@@ -50,6 +50,39 @@ describe("POST /offers/:offerId/applications", () => {
       });
 
       expect(response.body[0]).not.toHaveProperty("studentId");
+    });
+
+    it("retourne les statuts retenue et non retenue de l'étudiant connecté", async () => {
+      const db = createTestDatabase();
+
+      db.prepare(
+        `UPDATE applications
+         SET student_id = ?, offer_id = ?, status = ?
+         WHERE id = ?`,
+      ).run(
+        STUDENT.MATEUSZ_KOWALSKI,
+        OFFER.DATA_QUALITY,
+        "REJECTED",
+        APPLICATION.LEA_CLOUD_MIGRATION,
+      );
+
+      app = createTestApp(db);
+
+      const response = await request(app)
+        .get("/applications")
+        .set("Authorization", tokenFor("STUDENT", STUDENT.MATEUSZ_KOWALSKI));
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveLength(2);
+      expect(response.body.map((application: { id: number }) => application.id)).toEqual(
+        expect.arrayContaining([
+          APPLICATION.MATEUSZ_CLOUD_MIGRATION,
+          APPLICATION.LEA_CLOUD_MIGRATION,
+        ]),
+      );
+      expect(response.body.map((application: { status: string }) => application.status)).toEqual(
+        expect.arrayContaining(["SELECTED", "REJECTED"]),
+      );
     });
 
     it("ne mélange pas les candidatures de deux étudiants", async () => {
