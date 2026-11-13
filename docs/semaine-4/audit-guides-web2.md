@@ -98,4 +98,6 @@ L'audit met néanmoins en évidence plusieurs possibilités d'amélioration, en 
 
 Les guides constituent une base utile pour orienter le travail de GitHub Copilot, mais certaines consignes gagneraient à être formulées plus explicitement.
 
-Aucun fichier de guide ni aucun code source n'a été modifié dans le cadre de cet audit.
+Les guides n'ont pas été modifiés dans le cadre de cet audit. Un test backend a toutefois été
+ajouté séparément pour compléter la couverture de EF-33 ; ce changement est documenté dans le
+bilan de la semaine 4.
