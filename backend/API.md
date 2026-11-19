@@ -149,6 +149,9 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 - Paramètre facultatif `period` : code de période (`P1`, `P2` ou `OTHER`). Le filtre est
   appliqué après les règles de visibilité du profil. Une valeur invalide ou répétée
   retourne `400` `INVALID_QUERY`.
+- Paramètre facultatif `q` : texte recherché dans le titre, sans tenir compte de la casse.
+  Les espaces au début et à la fin sont ignorés. Une valeur vide est ignorée. 100 caractères
+  au maximum. Le filtre se combine avec `period` et les règles de visibilité du profil.
 
 ### Réponses
 
@@ -172,6 +175,7 @@ récente à la plus ancienne, puis de la plus récente à la plus ancienne.
 
 - `401` `UNAUTHENTICATED` : session absente ou invalide.
 - `403` `FORBIDDEN` : contact seulement promoteur ou signataire.
+- `400` `INVALID_QUERY` : `q` est répété ou dépasse 100 caractères.
 
 ## POST /offers/:offerId/applications
 

@@ -45,17 +45,24 @@ describe("ApplicationsPage", () => {
 
   it("permet de retirer uniquement une candidature en cours", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    let withdrawn = false;
     const fetchMock = stubFetch({
       "/api/applications/1/withdraw": () =>
-        Response.json({
-          id: 1,
-          offerId: 1,
-          message: null,
-          status: "WITHDRAWN",
-          appliedAt: "2026-10-01 10:00:00",
-        }),
+        (() => {
+          withdrawn = true;
+          return Response.json({
+            id: 1,
+            offerId: 1,
+            message: null,
+            status: "WITHDRAWN",
+            appliedAt: "2026-10-01 10:00:00",
+          });
+        })(),
       "/api/applications": () =>
-        Response.json([application("IN_PROGRESS", 1), application("SELECTED", 2)]),
+        Response.json([
+          application(withdrawn ? "WITHDRAWN" : "IN_PROGRESS", 1),
+          application("SELECTED", 2),
+        ]),
     });
 
     render(<ApplicationsPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
@@ -69,6 +76,11 @@ describe("ApplicationsPage", () => {
       expect.objectContaining({ method: "PATCH" }),
     ));
     expect(confirm).toHaveBeenCalledWith("Retirer cette candidature ?");
+    await waitFor(() => {
+      const row = screen.getByText("Offre 1").closest("tr");
+      expect(row).toHaveTextContent("Retirée");
+      expect(screen.queryByRole("button", { name: "Retirer" })).not.toBeInTheDocument();
+    });
     confirm.mockRestore();
   });
 

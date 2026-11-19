@@ -68,6 +68,28 @@ describe("OffersPage", () => {
     );
   });
 
+  it("recherche les offres par titre et affiche un message quand aucun titre ne correspond", async () => {
+    const fetchMock = stubFetch({
+      "/api/offers": () => Response.json([]),
+    });
+
+    render(<OffersPage user={studentUser} token="jeton" onUnauthorized={vi.fn()} />);
+    await screen.findByText("Aucune offre à afficher.");
+
+    fireEvent.change(screen.getByLabelText("Rechercher une offre"), {
+      target: { value: "  react " },
+    });
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        "/api/offers?q=react",
+        expect.any(Object),
+      ),
+    );
+    expect(await screen.findByText("Aucune offre ne correspond à votre recherche."))
+      .toBeInTheDocument();
+  });
+
   it("adapte la description au profil", async () => {
     stubFetch({ "/api/offers": () => Response.json([]) });
 
