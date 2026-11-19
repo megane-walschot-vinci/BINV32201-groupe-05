@@ -5,9 +5,14 @@ import { isOfferList } from "../utils/guards.ts";
 export const getOffers = async (
   token: string,
   period?: PeriodFilter,
+  search = "",
   signal?: AbortSignal,
 ): Promise<Offer[]> => {
-  const query = period ? `?period=${encodeURIComponent(period)}` : "";
+  const params = new URLSearchParams();
+  if (period) params.set("period", period);
+  const normalizedSearch = search.trim().toLowerCase();
+  if (normalizedSearch !== "") params.set("q", normalizedSearch);
+  const query = params.toString() === "" ? "" : `?${params.toString()}`;
   const response = await fetch(`${API_URL}/offers${query}`, {
     headers: { Authorization: token },
     signal,

@@ -106,3 +106,5 @@ cross-layer examples, and [backend/API.md](../backend/API.md) for route contract
 - [docs/seed.md](../docs/seed.md): fictitious users, companies, offers, and stable test
   scenarios.
 - [backend/API.md](../backend/API.md): API authentication, response formats, and routes.
+
+Pour tout ajout de fonctionnalité ou correction de bug, lis et applique `.github/skills/test-driven-development/SKILL.md` avant de modifier le code de l’application. Écris et exécute les tests d’abord, présente-les, puis attends leur validation explicite avant l’implémentation. Cette règle ne concerne pas les demandes d’explication ou de documentation seules.

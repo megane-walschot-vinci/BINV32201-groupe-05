@@ -9,20 +9,21 @@ import { hasContactRole, isAdmin, isStudent } from "./permissions.ts";
  * Offres visibles selon le profil (CdC § 4) : toutes pour l'administrateur, les offres
  * publiées pour l'étudiant, les offres qu'il a déposées pour un déposant.
  */
-const visibilityFilter = (viewer: User, period?: PeriodCode): OfferFilter => {
+const visibilityFilter = (viewer: User, period?: PeriodCode, search?: string): OfferFilter => {
   const periodFilter: OfferFilter = period === undefined ? {} : { period };
+  const searchFilter: OfferFilter = search === undefined ? {} : { search };
 
-  if (isAdmin(viewer)) return periodFilter;
-  if (isStudent(viewer)) return { ...periodFilter, status: "PUBLISHED" };
+  if (isAdmin(viewer)) return { ...periodFilter, ...searchFilter };
+  if (isStudent(viewer)) return { ...periodFilter, ...searchFilter, status: "PUBLISHED" };
   if (hasContactRole(viewer, "DEPOSITOR")) {
-    return { ...periodFilter, depositorContactId: viewer.id };
+    return { ...periodFilter, ...searchFilter, depositorContactId: viewer.id };
   }
   throw new HttpError(403, "FORBIDDEN", "Vous n'avez pas accès aux offres");
 };
 
 export const createOffersService = (repository: OffersRepository) => ({
-  listOffers: (viewer: User, period?: PeriodCode): Offer[] =>
-    repository.findAll(visibilityFilter(viewer, period)).map(toOffer),
+  listOffers: (viewer: User, period?: PeriodCode, search?: string): Offer[] =>
+    repository.findAll(visibilityFilter(viewer, period, search)).map(toOffer),
 });
 
 export type OffersService = ReturnType<typeof createOffersService>;

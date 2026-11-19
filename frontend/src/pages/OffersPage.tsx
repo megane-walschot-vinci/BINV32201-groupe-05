@@ -21,16 +21,28 @@ const DESCRIPTIONS = {
 
 const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
   const [period, setPeriod] = useState<PeriodFilter | "">("");
+  const [search, setSearch] = useState("");
   const { offers, isLoading, error } = useOffers(
     token,
     onUnauthorized,
     period === "" ? undefined : period,
+    search,
   );
 
   const renderContent = () => {
     if (error) return <ErrorState message={error} />;
     if (isLoading) return <LoadingState />;
-    if (offers.length === 0) return <EmptyState message="Aucune offre à afficher." />;
+    if (offers.length === 0) {
+      return (
+        <EmptyState
+          message={
+            search.trim() === ""
+              ? "Aucune offre à afficher."
+              : "Aucune offre ne correspond à votre recherche."
+          }
+        />
+      );
+    }
     return (
       <>
         <p className="result-count">
@@ -64,6 +76,15 @@ const OffersPage = ({ user, token, onUnauthorized }: OffersPageProps) => {
             </option>
           ))}
         </select>
+      </label>
+      <label>
+        <span>Rechercher une offre</span>
+        <input
+          type="search"
+          aria-label="Rechercher une offre"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
       </label>
       {renderContent()}
     </section>

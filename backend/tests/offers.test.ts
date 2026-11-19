@@ -10,8 +10,11 @@ beforeEach(() => {
   app = createTestApp();
 });
 
-const listOffersAs = (kind: UserKind, id: number, period?: string) => {
-  const query = period === undefined ? "" : `?period=${period}`;
+const listOffersAs = (kind: UserKind, id: number, period?: string, search?: string) => {
+  const params = new URLSearchParams();
+  if (period !== undefined) params.set("period", period);
+  if (search !== undefined) params.set("q", search);
+  const query = params.toString() === "" ? "" : `?${params.toString()}`;
   return request(app)
     .get(`/offers${query}`)
     .set("Authorization", tokenFor(kind, id));
@@ -108,6 +111,29 @@ describe("GET /offers : filtre par période", () => {
 
     expect(response.status).toBe(200);
     expect(offerIds(response.body)).toHaveLength(10);
+  });
+
+  describe("GET /offers : recherche par titre", () => {
+    it("ignore la casse et les espaces autour du texte, en combinant la période", async () => {
+      const response = await listOffersAs("ADMIN", ADMINISTRATOR.ANNE_LECLERCQ, "P2", "  rEaCt  ");
+
+      expect(response.status).toBe(200);
+      expect(offerIds(response.body)).toEqual([OFFER.FLEET_APP]);
+    });
+
+    it("traite une recherche vide comme une absence de recherche", async () => {
+      const response = await listOffersAs("ADMIN", ADMINISTRATOR.ANNE_LECLERCQ, undefined, "   ");
+
+      expect(response.status).toBe(200);
+      expect(offerIds(response.body)).toHaveLength(10);
+    });
+
+    it("conserve la visibilité des étudiants pendant la recherche", async () => {
+      const response = await listOffersAs("STUDENT", STUDENT.LUCAS_DUPONT, undefined, "portail");
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([]);
+    });
   });
 
   it("filtre les offres administrateur par code de période", async () => {
